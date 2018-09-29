@@ -2,6 +2,7 @@ package com.bajiuk.pet
 
 import android.app.Application
 import com.bajiuk.pet.bash.model.Api
+import com.bajiuk.pet.bash.model.Manager
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -28,9 +29,10 @@ class App : Application() {
                 .client(httpClient.build())
                 .build()
 
-        bashApi = retrofit.create(Api::class.java)
+        val bashApi = retrofit.create(Api::class.java)
+        bashManager = Manager(bashApi)
     }
 
-    lateinit var bashApi : Api
+    lateinit var bashManager : Manager
         private set
 }
