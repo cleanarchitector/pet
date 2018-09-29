@@ -1,19 +1,15 @@
 package com.bajiuk.pet.bash.view
 
-import android.text.Spannable
 import com.bajiuk.pet.bash.model.Manager
-import io.reactivex.Completable
-import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
 
 class ViewModel(var manager: Manager) {
-    var feedSizeSubject = BehaviorSubject.createDefault(0)
-    var mainStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
-    var listStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
+    val feedSizeSubject = BehaviorSubject.createDefault(0)
+    val mainStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
+    val listStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
 
     var state: State = EMPTY()
 
@@ -25,22 +21,27 @@ class ViewModel(var manager: Manager) {
         state.reset()
     }
 
-    interface State {
-        fun load() {}
+    open inner class State {
+        open fun load() {}
 
-        fun onError(throwable: Throwable) {}
-        fun onData(size: Int) {}
+        open fun onError(throwable: Throwable) {}
+        open fun onData(size: Int) {}
 
-        fun reset() {}
+        open fun reset() {
+            feedSizeSubject.onNext(0)
+            mainStateSubject.onNext(ViewState.loadingState(false))
+            listStateSubject.onNext(ViewState.loadingState(false))
+            state = EMPTY()
+        }
     }
 
-    inner class EMPTY : State {
+    inner class EMPTY : State() {
         override fun load() {
             state = LOADING()
         }
     }
 
-    inner class LOADING : State {
+    inner class LOADING : State() {
 
         init {
             request()
@@ -63,19 +64,19 @@ class ViewModel(var manager: Manager) {
         }
     }
 
-    inner class ERROR : State {
+    inner class ERROR : State() {
         override fun load() {
             state = LOADING()
         }
     }
 
-    inner class DATA : State {
+    inner class DATA : State() {
         override fun load() {
             state = DATA_LOADING()
         }
     }
 
-    inner class DATA_LOADING : State {
+    inner class DATA_LOADING : State() {
         init {
             request()
             listStateSubject.onNext(ViewState.loadingState(true))
@@ -97,7 +98,7 @@ class ViewModel(var manager: Manager) {
         }
     }
 
-    inner class DATA_ERROR : State {
+    inner class DATA_ERROR : State() {
         override fun load() {
             state = DATA_LOADING()
         }
@@ -114,6 +115,7 @@ class ViewModel(var manager: Manager) {
                 state.onError(it)
             })
     }
+
     private fun resetRequest() {
         disposable?.dispose()
     }

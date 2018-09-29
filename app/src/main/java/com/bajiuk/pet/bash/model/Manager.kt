@@ -16,7 +16,7 @@ class Manager(private val api: Api) {
             .doOnSuccess {
                 sleep(5000)
                 posts.addAll(it) }
-            .toCompletable()
+            .ignoreElement()
     }
 
     fun get(index : Int) = posts[index]

@@ -3,6 +3,7 @@ package com.bajiuk.pet
 import android.app.Application
 import com.bajiuk.pet.bash.model.Api
 import com.bajiuk.pet.bash.model.Manager
+import com.bajiuk.pet.bash.view.ViewModel
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -31,8 +32,11 @@ class App : Application() {
 
         val bashApi = retrofit.create(Api::class.java)
         bashManager = Manager(bashApi)
+        bashViewModel = ViewModel(bashManager)
     }
 
     lateinit var bashManager : Manager
+        private set
+    lateinit var bashViewModel : ViewModel
         private set
 }

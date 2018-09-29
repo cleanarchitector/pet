@@ -15,13 +15,15 @@ import io.reactivex.internal.disposables.DisposableContainer
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import android.support.v7.widget.RecyclerView
-
+import com.bajiuk.pet.bash.view.PostViewHolder
+import com.bajiuk.pet.recyclerview.MarginItemDecoration
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: ViewModel
     private lateinit var adapter: FeedAdapter
+    private lateinit var layoutManager: LinearLayoutManager
 
     private val disposables = CompositeDisposable()
 
@@ -29,11 +31,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        viewModel = ViewModel((application as App).bashManager)
-        adapter = FeedAdapter(viewModel, (application as App).bashManager)
+        val bashManager = (application as App).bashManager
+        viewModel = (application as App).bashViewModel
+
+
+        adapter = FeedAdapter(viewModel, bashManager)
+        layoutManager = recycler_bash.layoutManager as LinearLayoutManager
 
         recycler_bash.adapter = adapter
-
+        recycler_bash.setHasFixedSize(true)
+        recycler_bash.addItemDecoration(
+            MarginItemDecoration(resources.getDimension(R.dimen.indent_half).toInt())
+        )
 
         viewModel.load()
 
@@ -48,10 +57,9 @@ class MainActivity : AppCompatActivity() {
 
         recycler_bash.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val visibleItemCount = recyclerView.layoutManager!!.childCount
-                val totalItemCount = recyclerView.layoutManager!!.getItemCount()
-                val pastVisibleItems = (recyclerView.layoutManager as LinearLayoutManager?)!!.findFirstVisibleItemPosition()
-                if (pastVisibleItems + visibleItemCount >= totalItemCount) {
+                val last = layoutManager.findLastVisibleItemPosition()
+                val holder = recyclerView.findViewHolderForLayoutPosition(last)
+                if (last + 1 == adapter.itemCount && holder is PostViewHolder) {
                     viewModel.load()
                 }
             }
@@ -60,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        adapter.reset()
         viewModel.reset()
         disposables.clear()
         super.onDestroy()

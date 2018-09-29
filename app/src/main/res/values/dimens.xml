@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="post_padding">32dp</dimen>
+    <dimen name="indent_half">4dp</dimen>
+    <dimen name="indent">8dp</dimen>
+    <dimen name="indent_double">16dp</dimen>
+
+    <dimen name="height_progress">60dp</dimen>
+    <dimen name="cornerradius_bashcard">4dp</dimen>
+
 </resources>

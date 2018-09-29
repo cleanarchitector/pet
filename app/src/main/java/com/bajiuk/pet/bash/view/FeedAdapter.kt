@@ -1,5 +1,6 @@
 package com.bajiuk.pet.bash.view
 
+import android.graphics.Rect
 import android.support.annotation.LayoutRes
 import android.support.v4.text.HtmlCompat
 import android.support.v7.widget.RecyclerView
@@ -8,35 +9,39 @@ import android.view.View
 import android.view.ViewGroup
 import com.bajiuk.pet.R
 import com.bajiuk.pet.bash.model.Manager
-import kotlinx.android.synthetic.main.item_post.view.*
+import io.reactivex.disposables.CompositeDisposable
+import kotlinx.android.synthetic.main.item_bashcard.view.*
+import kotlinx.android.synthetic.main.item_error.view.*
 
-class FeedAdapter(val viewModel: ViewModel, val manager: Manager) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class FeedAdapter(private val viewModel: ViewModel, private val manager: Manager) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    var size = 0
-    var error : Throwable? = null
-    var loading : Boolean = false
+    private var size = 0
+    private var error: Throwable? = null
+    private var loading: Boolean = false
+
+    private val disposables = CompositeDisposable()
 
     init {
-        viewModel.listStateSubject.subscribe(
-            {
+        with(disposables) {
+            add(viewModel.listStateSubject.subscribe {
                 error = it.throwable
                 loading = it.isLoading
                 notifyDataSetChanged()
-            }
-        )
-        viewModel.feedSizeSubject.subscribe(
-            {
+            })
+            add(viewModel.feedSizeSubject.subscribe {
                 size = it
                 notifyDataSetChanged()
-            }
-        )
+            })
+        }
+        setHasStableIds(true)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, type: Int): RecyclerView.ViewHolder {
         return when (type) {
-            0 -> PostViewHolder.create(parent)
-            1 -> ErrorViewHolder.create(parent)
-            else -> LoadingViewHolder.create(parent)
+            PostViewHolder.type -> PostViewHolder.create(parent)
+            ErrorViewHolder.type -> ErrorViewHolder.create(parent) { viewModel.load() }
+            LoadingViewHolder.type -> LoadingViewHolder.create(parent)
+            else -> throw IllegalStateException()
         }
     }
 
@@ -44,35 +49,59 @@ class FeedAdapter(val viewModel: ViewModel, val manager: Manager) : RecyclerView
         return when {
             position < size -> PostViewHolder.type
             error != null -> ErrorViewHolder.type
-            else -> LoadingViewHolder.type
+            loading -> LoadingViewHolder.type
+            else -> throw IllegalStateException()
         }
     }
 
     override fun getItemCount(): Int {
-        return size + if (loading || error != null) 1 else  0
+        return size + if (loading || error != null) 1 else 0
     }
 
     override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
         when (viewHolder) {
             is PostViewHolder -> viewHolder.bind(manager.get(position))
+            is ErrorViewHolder -> viewHolder.bind(error!!)
         }
+    }
+
+    override fun getItemId(position: Int): Long {
+        return when {
+            position < size -> position.toLong()
+            error != null -> Long.MAX_VALUE
+            loading -> Long.MAX_VALUE - 1
+            else -> throw IllegalStateException()
+        }
+    }
+
+    fun reset() {
+        disposables.clear()
     }
 }
 
 class LoadingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     companion object {
-        private val layoutId = R.layout.item_loading
+        private const val layoutId = R.layout.item_progress
         fun create(parent: ViewGroup) = LoadingViewHolder(createView(parent, layoutId))
-        val type = 2
+        const val type = layoutId
     }
 }
 
+class ErrorViewHolder(view: View, clickListener: () -> Unit) : RecyclerView.ViewHolder(view) {
 
-class ErrorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    init {
+        itemView.button_retry.setOnClickListener { clickListener() }
+    }
+
+    fun bind(throwable: Throwable) {
+        itemView.text_error.text = throwable.message ?: itemView.context.getText(R.string.unknown_error)
+    }
+
     companion object {
-        private val layoutId = R.layout.item_error
-        fun create(parent: ViewGroup) = ErrorViewHolder(createView(parent, layoutId))
-        val type = 1
+        private const val layoutId = R.layout.item_error
+        fun create(parent: ViewGroup, clickListener: () -> Unit) =
+            ErrorViewHolder(createView(parent, layoutId), clickListener)
+        const val type = layoutId
     }
 }
 
@@ -82,9 +111,9 @@ class PostViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     }
 
     companion object {
-        private val layoutId = R.layout.item_post
+        private const val layoutId = R.layout.item_bashcard
         fun create(parent: ViewGroup) = PostViewHolder(createView(parent, layoutId))
-        val type = 0
+        const val type = layoutId
     }
 }
 
