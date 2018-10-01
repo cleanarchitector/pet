@@ -51,10 +51,14 @@ class BashActivity : AppCompatActivity() {
         with(disposables) {
             add(viewModel.mainStateSubject.subscribe {
                 progress_bash.visibility = if (it.isLoading) View.VISIBLE else View.GONE
-                text_bash_error.visibility = if (it.throwable != null) View.VISIBLE else View.GONE
+                val visible = if (it.throwable != null) View.VISIBLE else View.GONE
+                text_bash_error.visibility = visible
+                button_bash_retry.visibility = visible
                 text_bash_error.text = it.throwable.toString()
             })
         }
+
+        button_bash_retry.setOnClickListener { viewModel.load() }
     }
 
     override fun onDestroy() {
