@@ -1,15 +1,23 @@
-package com.bajiuk.pet.bash.view
+package com.bajiuk.pet.bash.viewmodel
 
-import com.bajiuk.pet.bash.model.Manager
+import com.bajiuk.pet.bash.model.BashManager
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 
-class ViewModel(var manager: Manager) {
+class BashViewModel(var manager: BashManager) {
     val feedSizeSubject = BehaviorSubject.createDefault(0)
-    val mainStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
-    val listStateSubject = BehaviorSubject.createDefault(ViewState.loadingState(false))
+    val mainStateSubject = BehaviorSubject.createDefault(
+        BashViewState.loadingState(
+            false
+        )
+    )
+    val listStateSubject = BehaviorSubject.createDefault(
+        BashViewState.loadingState(
+            false
+        )
+    )
 
     var state: State = EMPTY()
 
@@ -29,8 +37,8 @@ class ViewModel(var manager: Manager) {
 
         open fun reset() {
             feedSizeSubject.onNext(0)
-            mainStateSubject.onNext(ViewState.loadingState(false))
-            listStateSubject.onNext(ViewState.loadingState(false))
+            mainStateSubject.onNext(BashViewState.loadingState(false))
+            listStateSubject.onNext(BashViewState.loadingState(false))
             state = EMPTY()
         }
     }
@@ -45,17 +53,17 @@ class ViewModel(var manager: Manager) {
 
         init {
             request()
-            mainStateSubject.onNext(ViewState.loadingState(true))
+            mainStateSubject.onNext(BashViewState.loadingState(true))
         }
 
         override fun onError(throwable: Throwable) {
-            mainStateSubject.onNext(ViewState.errorState(throwable))
+            mainStateSubject.onNext(BashViewState.errorState(throwable))
             state = ERROR()
         }
 
         override fun onData(size: Int) {
             feedSizeSubject.onNext(size)
-            mainStateSubject.onNext(ViewState.loadingState(false))
+            mainStateSubject.onNext(BashViewState.loadingState(false))
             state = DATA()
         }
 
@@ -79,17 +87,17 @@ class ViewModel(var manager: Manager) {
     inner class DATA_LOADING : State() {
         init {
             request()
-            listStateSubject.onNext(ViewState.loadingState(true))
+            listStateSubject.onNext(BashViewState.loadingState(true))
         }
 
         override fun onError(throwable: Throwable) {
-            listStateSubject.onNext(ViewState.errorState(throwable))
+            listStateSubject.onNext(BashViewState.errorState(throwable))
             state = DATA_ERROR()
         }
 
         override fun onData(size: Int) {
             feedSizeSubject.onNext(size)
-            listStateSubject.onNext(ViewState.loadingState(false))
+            listStateSubject.onNext(BashViewState.loadingState(false))
             state = DATA()
         }
 

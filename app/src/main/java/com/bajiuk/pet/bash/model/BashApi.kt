@@ -4,7 +4,7 @@ import io.reactivex.Flowable
 import retrofit2.http.GET
 
 
-interface Api {
+interface BashApi {
     @GET("api/random?num=10")
-    fun get(): Flowable<List<Post>>
+    fun get(): Flowable<List<BashPost>>
 }

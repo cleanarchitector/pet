@@ -2,23 +2,21 @@ package com.bajiuk.pet.bash.model
 
 import io.reactivex.Completable
 import io.reactivex.Flowable
-import java.lang.Thread.sleep
 
-class Manager(private val api: Api) {
+class BashManagerImpl(private val api: BashApi) : BashManager {
 
     private var posts = mutableListOf<String>()
 
-    fun load(): Completable {
+    override fun load(): Completable {
         return api.get()
             .flatMap { Flowable.fromIterable(it) }
             .map { it.text }
             .toList()
-            .doOnSuccess {
-                sleep(5000)
-                posts.addAll(it) }
+            .doOnSuccess { posts.addAll(it) }
             .ignoreElement()
     }
 
-    fun get(index : Int) = posts[index]
-    fun size() = posts.size
+    override fun get(index: Int) = posts[index]
+
+    override fun size() = posts.size
 }

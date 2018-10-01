@@ -1,6 +1,5 @@
 package com.bajiuk.pet.bash.view
 
-import android.graphics.Rect
 import android.support.annotation.LayoutRes
 import android.support.v4.text.HtmlCompat
 import android.support.v7.widget.RecyclerView
@@ -8,12 +7,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bajiuk.pet.R
-import com.bajiuk.pet.bash.model.Manager
+import com.bajiuk.pet.bash.model.BashManager
+import com.bajiuk.pet.bash.viewmodel.BashViewModel
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.item_bashcard.view.*
 import kotlinx.android.synthetic.main.item_error.view.*
 
-class FeedAdapter(private val viewModel: ViewModel, private val manager: Manager) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class BashRecyclerAdapter(
+    private val viewModel: BashViewModel,
+    private val manager: BashManager
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var size = 0
     private var error: Throwable? = null
